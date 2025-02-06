@@ -1,130 +1,101 @@
-import { useState } from "react";
-import JSConfetti from 'js-confetti'
+import { useState, useEffect } from "react";
+import JSConfetti from 'js-confetti';
+import { motion } from "framer-motion";
+
 function App() {
+    const jsConfetti = new JSConfetti();
+    const [randomValor, setRandomValor] = useState({});
+    const [valueSi, setValueSi] = useState(false);
+    const [userIP, setUserIP] = useState("");
+    const [noClickCount, setNoClickCount] = useState(0); 
+    const [siButtonMessage, setSiButtonMessage] = useState("Sí 💖"); 
 
+    let noMessages = [
+        { id: 1, description: "¿Segura que no? Piensa bien 🥺" },
+        { id: 2, description: "Pinesa todas las picaras que podriamos comer" },
+        { id: 3, description: "Nos contaremos chismes" },
+        { id: 4, description: "Mira que no insisto mucho... o sí? 🙊" },
+        { id: 5, description: "Voy a seguir intentando 🫣" },
+        { id: 6, description: "No te vas a arrepentir 🙊" },
+    ];
 
-  const jsConfetti = new JSConfetti()
-  const [randomValor, setRandomValor] = useState({})
+    const [noMessageIndex, setNoMessageIndex] = useState(0);
 
-  const [imagenCargada, setImagenCargada] = useState(false);
-  const [agrandar, setAgrandar] = useState(45)
+    useEffect(() => {
+        fetch("https://api64.ipify.org?format=json")
+            .then(response => response.json())
+            .then(data => setUserIP(data.ip))
+            .catch(error => console.error("Error obteniendo la IP:", error));
+    }, []);
 
+    const handleClick = async (button) => {
+        await fetch("http://localhost:5000/save-click", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ip: userIP, button })
+        });
+    };
 
-  const [valueSi, setValueSi] = useState(false)
+    const randomResponse = async () => {
+        setRandomValor(noMessages[noMessageIndex]);
+        await handleClick("No");
+        setNoClickCount(prev => prev + 1);
+        setNoMessageIndex(prevIndex => (prevIndex + 1) % noMessages.length);
+    };
 
-  let random = [{
-    id: 1,
-    description: "Di si por favor",
-    img: "https://i.pinimg.com/originals/db/aa/c1/dbaac13f6278b91a15e480752b8a7242.gif"
-  },
-  {
-    id: 1,
-    description: "Piénsalo de nuevo.",
-    img: "https://i.pinimg.com/originals/77/6b/21/776b215bed3deeef47fd3aa657685a18.gif"
-  }
-    ,
-  {
-    id: 2,
-    description: "Vamos, atrévete a decir que sí.",
-    img: "https://www.gifmaniacos.es/wp-content/uploads/2019/05/gatitos-kawaii-gifmaniacos.es-19.gif"
-  },
-  {
-    id: 3,
-    description: "No tengas miedo, será genial.",
-    img: "https://i.pinimg.com/originals/e1/c3/88/e1c388133e0f998e25bb17c837b74a14.gif"
-  },
-  {
-    id: 4,
-    description: "Confía en mí, será divertido.",
-    img: "https://media.tenor.com/Bn88VELdNI8AAAAi/peach-goma.gif"
-  },
-  {
-    id: 5,
-    description: "No tengas dudas, te hará sonreír.",
-    img: "https://i.pinimg.com/originals/c6/b3/0d/c6b30d1a2dc178aeb92de63295d4ae64.gif"
-  },
-  {
-    id: 6,
-    description: "Te prometo que será inolvidable.",
-    img: "https://media.tenor.com/N2oqtqaB_G0AAAAi/peach-goma.gif"
-  },
-  {
-    id: 7,
-    description: "No dejes que el miedo te detenga.",
-    img: "https://i.pinimg.com/originals/db/aa/c1/dbaac13f6278b91a15e480752b8a7242.gif"
-  },
-  {
-    id: 8,
-    description: "Confía en el destino, nos está dando una señal.",
-    img: "https://media.tenor.com/cbEccaK9QxMAAAAi/peach-goma.gif"
-  },
-  {
-    id: 9,
-    description: "Confía en mí.",
-    img: "https://i.pinimg.com/originals/db/aa/c1/dbaac13f6278b91a15e480752b8a7242.gif"
-  },
-  {
-    id: 10,
-    description: "No te arrepentirás.",
-    img: "https://media.tenor.com/I7KdFaMzUq4AAAAi/peach-goma.gif"
-  }]
-
-  const randomResponse = () => {
-    let index = Math.floor(Math.random() * 11);
-    console.log(random[index])
-    if (agrandar <= 500) {
-      setAgrandar(agrandar + 10)
-    }
-    setRandomValor(random[index]);
-  }
-
-
-  const handleImageLoad = () => {
-    setImagenCargada(true);
-  }
-
-
-  return (
-    <main id="canvas" className="fondo w-screen h-screen bg-no-repeat bg-cover flex items-center justify-center bg-center ">
-      {
-        !valueSi ? (
-          <div className="p-5">
-            <h1 className="text-white font-bold text-5xl text-center">¿Quieres ser mi San Valentin?</h1>
-            <img src={Object.keys(randomValor).length === 0 ?
-              "https://i.pinimg.com/originals/db/aa/c1/dbaac13f6278b91a15e480752b8a7242.gif" : randomValor.img} alt="San Valentin" className="mx-auto" width={400} height={400} />
-            <div className="grid grid-cols-1 md:grid-cols-2 mt-10 gap-5 items-center">
-              <button onClick={() => {
-                setValueSi(true)
-
-                jsConfetti.addConfetti({
-                  emojis: ['😍', '🥰', '❤️', '😘'],
-                  emojiSize: 70,
-                  confettiNumber: 80,
-                })
-
-              }} className={`bg-green-500 text-white font-bold p-2 rounded-md text-xl h-${agrandar}`} style={{ height: agrandar }}>
-                Si
-              </button>
-              <button
-                className="bg-red-500 text-white font-bold p-2 rounded-md text-xl"
-                onClick={randomResponse}
-                disabled={imagenCargada} // Deshabilita el botón si la imagen no se ha cargado
-              >
-                {Object.keys(randomValor).length === 0 ? "No" : randomValor.description}
-                <span hidden>{document.title = Object.keys(randomValor).length === 0 ? "¿Quieres ser mi San Valentin?" : randomValor.description}</span>
-              </button>
+    return (
+        <main className="w-screen h-screen bg-gradient-to-r from-rose-500 to-pink-600 flex items-center justify-center font-['Poppins']">
+            <div className="p-12 bg-white bg-opacity-30 backdrop-blur-lg rounded-2xl shadow-2xl text-center space-y-12 max-w-2xl w-full">
+                {!valueSi ? (
+                    <>
+                        <h1 className="text-5xl font-extrabold text-white drop-shadow-lg leading-snug">
+                            ¿Quieres ser mi San Valentín? ❤️
+                        </h1>
+                        <img 
+                            src={randomValor.img || "/gato_lengua.jpeg"} 
+                            alt="San Valentin" 
+                            className="mx-auto rounded-lg shadow-lg w-80 h-80 object-cover" 
+                        />
+                        <div className="flex justify-center gap-8">
+                            <motion.button
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={async () => {
+                                    setValueSi(true);
+                                    jsConfetti.addConfetti({
+                                        emojis: ['😍', '🥰', '❤️', '😘'],
+                                        emojiSize: 80,
+                                        confettiNumber: 120,
+                                    });
+                                    await handleClick("Sí");
+                                }}
+                                className="bg-green-500 hover:bg-green-600 text-white font-bold py-5 px-10 rounded-full text-3xl shadow-lg transition-all duration-300"
+                            >
+                                {siButtonMessage}
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={randomResponse}
+                                className="bg-red-500 hover:bg-red-600 text-white font-bold py-5 px-10 rounded-full text-3xl shadow-lg transition-all duration-300"
+                            >
+                                {randomValor.description || "No 💔"}
+                            </motion.button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="space-y-10">
+                        <h1 className="text-6xl font-extrabold text-white drop-shadow-lg leading-snug">¡Sabía que dirías que sí! ❤️</h1>
+                        <img 
+                            src="/gato_si.png" 
+                            alt="Celebración" 
+                            className="mx-auto rounded-lg shadow-lg w-80 h-80 object-cover" 
+                        />
+                    </div>
+                )}
             </div>
-          </div>
-        ) : (
-          <div className="flex justify-center items-center flex-col space-y-10">
-            <h1 className="text-4xl text-white font-bold">Sabia que dirias que si ❤️!</h1>
-            <img src="https://i.pinimg.com/originals/9b/dc/c6/9bdcc6206c1d36a37149d31108c6bb41.gif" alt="" className="mx-auto" />
-            <span hidden>{document.title = 'Sabia que dirias que si ❤️!'}</span>
-          </div>
-        )
-      }
-    </main>
-  )
+        </main>
+    );
 }
 
-export default App
+export default App;
